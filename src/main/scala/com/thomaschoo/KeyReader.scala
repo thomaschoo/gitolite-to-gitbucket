@@ -2,9 +2,9 @@ package com.thomaschoo
 
 import java.io.File
 
-import scala.io.Source
-
 import com.thomaschoo.helpers.GitoliteConfig
+
+import scala.io.Source
 
 class KeyReader {
   def listFiles(): List[File] = new File(GitoliteConfig.directory).listFiles.toList
