@@ -2,12 +2,14 @@ package com.thomaschoo.services
 
 import java.sql.Clob
 
+import com.thomaschoo.helpers.Config
+
 import models.gitbucket.{Account, SshKey}
 import scalikejdbc._
 import scalikejdbc.config._
 
 object GitBucketDao {
-  DBsWithEnv("gitbucket").setupAll()
+  DBsWithEnv("gitBucket").setupAll()
 
   implicit val autoSession = AutoSession
 
@@ -43,7 +45,7 @@ object GitBucketDao {
               case Some(k) =>
                 SshKey(userName = k.userName, sshKeyId = k.sshKeyId, title = k.title, publicKey = keyClob).save()
               case None =>
-                SshKey.create(username, title = "Origin Import", publicKey = keyClob)
+                SshKey.create(username, title = Config.keyTitle, publicKey = keyClob)
             }
         }
       }
@@ -53,7 +55,7 @@ object GitBucketDao {
       withSQL {
         select
           .from(Account as Account.a)
-          .leftJoin(SshKey as SshKey.sk).on(sqls"a.USER_NAME = sk.USER_NAME AND sk.TITLE = 'Origin Import'")
+          .leftJoin(SshKey as SshKey.sk).on(sqls"a.USER_NAME = sk.USER_NAME AND sk.TITLE = ${Config.keyTitle}")
           .where(sqls"REPLACE(SUBSTRING(a.MAIL_ADDRESS, 0, LOCATE('@', a.MAIL_ADDRESS, -1) - 1), '.', '') IN (${sshKeys.keys})")
       }.map(extendAccount).list().apply()
 
