@@ -8,6 +8,6 @@ object Runner extends App {
 
   files foreach { f =>
     val content = keyReader.retrieveContents(f)
-    migration.insertKey(content, keyReader.getFilenameWithoutExtension(f))
+    migration.insertKey(content, keyReader.getFilename(f))
   }
 }

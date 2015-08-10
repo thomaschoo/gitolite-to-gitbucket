@@ -20,6 +20,10 @@ class KeyReaderSpec extends Specification {
       "start with 'ssh-rsa'" >> {
         files forall (keyReader.retrieveContents(_).startsWith("ssh-rsa")) must beTrue
       }
+
+      "not contain '.' in their name" >> {
+        files forall (keyReader.getFilename(_).contains(".")) must beFalse
+      }
     }
   }
 }
