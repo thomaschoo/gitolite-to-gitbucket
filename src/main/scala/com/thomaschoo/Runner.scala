@@ -1,13 +1,14 @@
 package com.thomaschoo
 
-object Runner extends App {
-  val migration = new Migration()
-  val keyReader = new KeyReader()
+import com.thomaschoo.services._
 
+object Runner extends App {
+  val keyReader = new KeyReader()
   val files = keyReader.listFiles()
 
-  files foreach { f =>
-    val content = keyReader.retrieveContents(f)
-    migration.insertKey(content, keyReader.getFilename(f))
+  val keys = files.foldLeft(Map[String, String]()) {
+    case (accum, file) => accum + (keyReader.getFilename(file) -> keyReader.retrieveContents(file))
   }
+
+  GitBucketDao.insertKeys(keys)
 }
