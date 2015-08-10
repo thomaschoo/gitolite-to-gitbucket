@@ -1,56 +1,54 @@
-package models
+package models.gitbucket
 
-import models.gitbucket.IssueLabel
-import scalikejdbc.specs2.mutable.AutoRollback
 import org.specs2.mutable._
 import scalikejdbc._
+import scalikejdbc.specs2.mutable.AutoRollback
 
+class IssueIdSpec extends Specification {
 
-class IssueLabelSpec extends Specification {
+  "IssueId" should {
 
-  "IssueLabel" should {
-
-    val il = IssueLabel.syntax("il")
+    val ii = IssueId.syntax("ii")
 
     "find by primary keys" in new AutoRollback {
-      val maybeFound = IssueLabel.find(123, 123, "MyString", "MyString")
+      val maybeFound = IssueId.find("MyString", "MyString")
       maybeFound.isDefined should beTrue
     }
     "find by where clauses" in new AutoRollback {
-      val maybeFound = IssueLabel.findBy(sqls.eq(il.issueId, 123))
+      val maybeFound = IssueId.findBy(sqls.eq(ii.repositoryName, "MyString"))
       maybeFound.isDefined should beTrue
     }
     "find all records" in new AutoRollback {
-      val allResults = IssueLabel.findAll()
+      val allResults = IssueId.findAll()
       allResults.size should be_>(0)
     }
     "count all records" in new AutoRollback {
-      val count = IssueLabel.countAll()
+      val count = IssueId.countAll()
       count should be_>(0L)
     }
     "find all by where clauses" in new AutoRollback {
-      val results = IssueLabel.findAllBy(sqls.eq(il.issueId, 123))
+      val results = IssueId.findAllBy(sqls.eq(ii.repositoryName, "MyString"))
       results.size should be_>(0)
     }
     "count by where clauses" in new AutoRollback {
-      val count = IssueLabel.countBy(sqls.eq(il.issueId, 123))
+      val count = IssueId.countBy(sqls.eq(ii.repositoryName, "MyString"))
       count should be_>(0L)
     }
     "create new record" in new AutoRollback {
-      val created = IssueLabel.create(userName = "MyString", repositoryName = "MyString", issueId = 123, labelId = 123)
+      val created = IssueId.create(userName = "MyString", repositoryName = "MyString", issueId = 123)
       created should not beNull
     }
     "save a record" in new AutoRollback {
-      val entity = IssueLabel.findAll().head
+      val entity = IssueId.findAll().head
       // TODO modify something
       val modified = entity
-      val updated = IssueLabel.save(modified)
+      val updated = IssueId.save(modified)
       updated should not equalTo(entity)
     }
     "destroy a record" in new AutoRollback {
-      val entity = IssueLabel.findAll().head
-      IssueLabel.destroy(entity)
-      val shouldBeNone = IssueLabel.find(123, 123, "MyString", "MyString")
+      val entity = IssueId.findAll().head
+      IssueId.destroy(entity)
+      val shouldBeNone = IssueId.find("MyString", "MyString")
       shouldBeNone.isDefined should beFalse
     }
   }

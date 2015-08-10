@@ -1,11 +1,9 @@
-package models
+package models.gitbucket
 
-import models.gitbucket.Issue
-import scalikejdbc.specs2.mutable.AutoRollback
+import org.joda.time.DateTime
 import org.specs2.mutable._
 import scalikejdbc._
-import org.joda.time.{DateTime}
-
+import scalikejdbc.specs2.mutable.AutoRollback
 
 class IssueSpec extends Specification {
 

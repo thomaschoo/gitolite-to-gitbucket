@@ -4,7 +4,7 @@ import org.joda.time.DateTime
 import org.specs2.mutable._
 
 import scalikejdbc._
-
+import scalikejdbc.specs2.mutable.AutoRollback
 
 class KeysSpec extends Specification {
 

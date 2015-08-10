@@ -3,7 +3,7 @@ package models.gitolite
 import org.specs2.mutable._
 
 import scalikejdbc._
-
+import scalikejdbc.specs2.mutable.AutoRollback
 
 class TaggingsSpec extends Specification {
 

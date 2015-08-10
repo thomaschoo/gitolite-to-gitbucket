@@ -1,56 +1,54 @@
-package models
+package models.gitbucket
 
-import models.gitbucket.GroupMember
-import scalikejdbc.specs2.mutable.AutoRollback
 import org.specs2.mutable._
 import scalikejdbc._
+import scalikejdbc.specs2.mutable.AutoRollback
 
+class LabelSpec extends Specification {
 
-class GroupMemberSpec extends Specification {
+  "Label" should {
 
-  "GroupMember" should {
-
-    val gm = GroupMember.syntax("gm")
+    val l = Label.syntax("l")
 
     "find by primary keys" in new AutoRollback {
-      val maybeFound = GroupMember.find("MyString", "MyString")
+      val maybeFound = Label.find(123, "MyString", "MyString")
       maybeFound.isDefined should beTrue
     }
     "find by where clauses" in new AutoRollback {
-      val maybeFound = GroupMember.findBy(sqls.eq(gm.groupName, "MyString"))
+      val maybeFound = Label.findBy(sqls.eq(l.labelId, 123))
       maybeFound.isDefined should beTrue
     }
     "find all records" in new AutoRollback {
-      val allResults = GroupMember.findAll()
+      val allResults = Label.findAll()
       allResults.size should be_>(0)
     }
     "count all records" in new AutoRollback {
-      val count = GroupMember.countAll()
+      val count = Label.countAll()
       count should be_>(0L)
     }
     "find all by where clauses" in new AutoRollback {
-      val results = GroupMember.findAllBy(sqls.eq(gm.groupName, "MyString"))
+      val results = Label.findAllBy(sqls.eq(l.labelId, 123))
       results.size should be_>(0)
     }
     "count by where clauses" in new AutoRollback {
-      val count = GroupMember.countBy(sqls.eq(gm.groupName, "MyString"))
+      val count = Label.countBy(sqls.eq(l.labelId, 123))
       count should be_>(0L)
     }
     "create new record" in new AutoRollback {
-      val created = GroupMember.create(groupName = "MyString", userName = "MyString")
+      val created = Label.create(userName = "MyString", repositoryName = "MyString", labelName = "MyString", color = "MyString")
       created should not beNull
     }
     "save a record" in new AutoRollback {
-      val entity = GroupMember.findAll().head
+      val entity = Label.findAll().head
       // TODO modify something
       val modified = entity
-      val updated = GroupMember.save(modified)
+      val updated = Label.save(modified)
       updated should not equalTo(entity)
     }
     "destroy a record" in new AutoRollback {
-      val entity = GroupMember.findAll().head
-      GroupMember.destroy(entity)
-      val shouldBeNone = GroupMember.find("MyString", "MyString")
+      val entity = Label.findAll().head
+      Label.destroy(entity)
+      val shouldBeNone = Label.find(123, "MyString", "MyString")
       shouldBeNone.isDefined should beFalse
     }
   }

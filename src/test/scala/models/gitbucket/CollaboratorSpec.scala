@@ -1,10 +1,8 @@
-package models
+package models.gitbucket
 
-import models.gitbucket.Collaborator
-import scalikejdbc.specs2.mutable.AutoRollback
 import org.specs2.mutable._
 import scalikejdbc._
-
+import scalikejdbc.specs2.mutable.AutoRollback
 
 class CollaboratorSpec extends Specification {
 
