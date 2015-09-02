@@ -5,12 +5,11 @@ import java.sql.Clob
 import com.thomaschoo.helpers.Config
 
 import models.gitbucket.{Account, SshKey}
+import models.gitolite.Users
 import scalikejdbc._
 import scalikejdbc.config._
 
 object GitBucketDao {
-  DBsWithEnv("gitBucket").setupAll()
-
   implicit val autoSession = AutoSession
 
   GlobalSettings.loggingSQLAndTime = new LoggingSQLAndTimeSettings(
@@ -20,6 +19,8 @@ object GitBucketDao {
   )
 
   def insertKeys(sshKeys: Map[String, String]): Unit = {
+    DBsWithEnv("gitBucket").setup()
+
     def extendAccount(rs: WrappedResultSet): (String, String, Option[SshKey]) = {
       val username = rs.string("UN_on_a")
       val filename = rs.string("MA_on_a")
@@ -61,4 +62,27 @@ object GitBucketDao {
 
     createOrUpdateSshKeys(extendedAccounts)
   }
+
+  def insertAccounts(gitoliteUsers: List[Users]): Unit = {
+    DBsWithEnv("gitBucket").setup()
+
+    DB localTx { implicit session =>
+      gitoliteUsers foreach { gitoliteUser =>
+        val user = gitoliteUser.tid.getOrElse(throw new Exception) // TODO: Better exception
+        val name = gitoliteUser.name.getOrElse(throw new Exception) // TODO: Better exception
+
+        Account.create(
+          userName = user,
+          mailAddress = gitoliteUser.email,
+          password = "",
+          administrator = gitoliteUser.admin,
+          registeredDate = gitoliteUser.createdAt,
+          updatedDate = gitoliteUser.updatedAt,
+          groupAccount = false,
+          fullName = name
+        )
+      }
+    }
+  }
+
 }
