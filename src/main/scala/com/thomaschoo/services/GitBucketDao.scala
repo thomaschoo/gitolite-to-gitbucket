@@ -7,10 +7,9 @@ import com.thomaschoo.helpers.Config
 import models.gitbucket.{Account, SshKey}
 import models.gitolite.Users
 import scalikejdbc._
-import scalikejdbc.config._
 
 object GitBucketDao {
-  implicit val autoSession = AutoSession
+  DB.setup()
 
   GlobalSettings.loggingSQLAndTime = new LoggingSQLAndTimeSettings(
     enabled = true,
@@ -19,8 +18,6 @@ object GitBucketDao {
   )
 
   def insertKeys(sshKeys: Map[String, String]): Unit = {
-    DBsWithEnv("gitBucket").setup()
-
     def extendAccount(rs: WrappedResultSet): (String, String, Option[SshKey]) = {
       val username = rs.string("UN_on_a")
       val filename = rs.string("MA_on_a")
@@ -35,8 +32,8 @@ object GitBucketDao {
       (username, filename.substring(0, filename.indexOf("@")).replace(".", ""), sshKey)
     }
 
-    def createOrUpdateSshKeys(extendAccounts: List[(String, String, Option[SshKey])]): Unit = {
-      DB localTx { implicit session =>
+    def createOrUpdateSshKeys(extendAccounts: List[(String, String, Option[SshKey])])
+                             (implicit session: DBSession): Unit = {
         extendAccounts foreach {
           case (username, filename, sshKey) =>
             val keyClob: Clob = session.connection.createClob()
@@ -49,24 +46,23 @@ object GitBucketDao {
                 SshKey.create(username, title = Config.keyTitle, publicKey = keyClob)
             }
         }
-      }
     }
 
-    val extendedAccounts =
-      withSQL {
-        select
-          .from(Account as Account.a)
-          .leftJoin(SshKey as SshKey.sk).on(sqls"a.USER_NAME = sk.USER_NAME AND sk.TITLE = ${Config.keyTitle}")
-          .where(sqls"REPLACE(SUBSTRING(a.MAIL_ADDRESS, 0, LOCATE('@', a.MAIL_ADDRESS, -1) - 1), '.', '') IN (${sshKeys.keys})")
-      }.map(extendAccount).list().apply()
+    NamedDB('gitBucket) localTx { implicit session =>
+      val extendedAccounts =
+        withSQL {
+          select
+            .from(Account as Account.a)
+            .leftJoin(SshKey as SshKey.sk).on(sqls"a.USER_NAME = sk.USER_NAME AND sk.TITLE = ${Config.keyTitle}")
+            .where(sqls"REPLACE(SUBSTRING(a.MAIL_ADDRESS, 0, LOCATE('@', a.MAIL_ADDRESS, -1) - 1), '.', '') IN (${sshKeys.keys})")
+        }.map(extendAccount).list().apply()
 
-    createOrUpdateSshKeys(extendedAccounts)
+      createOrUpdateSshKeys(extendedAccounts)
+    }
   }
 
   def insertAccounts(gitoliteUsers: List[Users]): Unit = {
-    DBsWithEnv("gitBucket").setup()
-
-    DB localTx { implicit session =>
+    NamedDB('gitBucket) localTx { implicit session =>
       gitoliteUsers foreach { gitoliteUser =>
         val user = gitoliteUser.tid.getOrElse(throw new Exception) // TODO: Better exception
         val name = gitoliteUser.name.getOrElse(throw new Exception) // TODO: Better exception

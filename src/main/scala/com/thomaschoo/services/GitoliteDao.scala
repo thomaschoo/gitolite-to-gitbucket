@@ -2,10 +2,9 @@ package com.thomaschoo.services
 
 import models.gitolite.Users
 import scalikejdbc._
-import scalikejdbc.config._
 
 object GitoliteDao {
-  implicit val autoSession = AutoSession
+  DB.setup()
 
   GlobalSettings.loggingSQLAndTime = new LoggingSQLAndTimeSettings(
     enabled = true,
@@ -14,9 +13,9 @@ object GitoliteDao {
   )
 
   def getUsers: List[Users] = {
-    DBsWithEnv("gitolite").setupAll()
-
-    Users.findAll()
+    NamedDB('gitolite) readOnly { implicit session =>
+      Users.findAll()
+    }
   }
 
 }

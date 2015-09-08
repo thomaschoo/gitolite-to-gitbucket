@@ -22,7 +22,7 @@ lazy val core = (project in file(".")).
       "mysql" % "mysql-connector-java" % "5.1.36",
       "ch.qos.logback" % "logback-classic" % "1.1.3",
       "org.scalikejdbc" %% "scalikejdbc" % "2.2.7",
-      "org.scalikejdbc" %% "scalikejdbc-config" % "2.2.7",
+      "com.zaxxer" % "HikariCP" % "2.4.1",
       "org.scalikejdbc" %% "scalikejdbc-test" % "2.2.7" % "test",
       "org.specs2" %% "specs2-core" % "3.5" % "test"
     )
