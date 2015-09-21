@@ -3,9 +3,8 @@ package com.thomaschoo.services
 import java.sql.Clob
 
 import com.thomaschoo.helpers.Config
-
-import models.gitbucket.{Account, SshKey}
-import models.gitolite.Users
+import models.gitbucket.{Account, Repository, SshKey}
+import models.gitolite.{Projects, Users}
 import scalikejdbc._
 
 object GitBucketDao {
@@ -34,18 +33,18 @@ object GitBucketDao {
 
     def createOrUpdateSshKeys(extendAccounts: List[(String, String, Option[SshKey])])
                              (implicit session: DBSession): Unit = {
-        extendAccounts foreach {
-          case (username, filename, sshKey) =>
-            val keyClob: Clob = session.connection.createClob()
-            keyClob.setString(1, sshKeys(filename))
+      extendAccounts foreach {
+        case (username, filename, sshKey) =>
+          val keyClob: Clob = session.connection.createClob()
+          keyClob.setString(1, sshKeys(filename))
 
-            sshKey match {
-              case Some(k) =>
-                SshKey(userName = k.userName, sshKeyId = k.sshKeyId, title = k.title, publicKey = keyClob).save()
-              case None =>
-                SshKey.create(username, title = Config.keyTitle, publicKey = keyClob)
-            }
-        }
+          sshKey match {
+            case Some(k) =>
+              SshKey(userName = k.userName, sshKeyId = k.sshKeyId, title = k.title, publicKey = keyClob).save()
+            case None =>
+              SshKey.create(username, title = Config.keyTitle, publicKey = keyClob)
+          }
+      }
     }
 
     NamedDB('gitBucket) localTx { implicit session =>
@@ -64,6 +63,7 @@ object GitBucketDao {
   def insertAccounts(gitoliteUsers: List[Users]): Unit = {
     NamedDB('gitBucket) localTx { implicit session =>
       gitoliteUsers foreach { gitoliteUser =>
+        // TODO: Catch duplicate, check -> update or create
         val user = gitoliteUser.tid.getOrElse(throw new Exception) // TODO: Better exception
         val name = gitoliteUser.name.getOrElse(throw new Exception) // TODO: Better exception
 
@@ -77,6 +77,33 @@ object GitBucketDao {
           groupAccount = false,
           fullName = name
         )
+      }
+    }
+  }
+
+  def insertRepositories(gitoliteProjects: List[(Projects, Users)]): Unit = {
+    NamedDB('gitBucket) localTx { implicit session =>
+      gitoliteProjects foreach {
+        case (gitoliteProject, gitoliteUser) =>
+          // TODO: Catch duplicate, check -> update or create
+          val descriptionClob: Option[Clob] = gitoliteProject.description match {
+            case Some(description) =>
+              val clob: Clob = session.connection.createClob()
+              clob.setString(1, description)
+              Some(clob)
+            case None => None
+          }
+
+          Repository.create(
+            userName = gitoliteUser.tid.getOrElse(throw new Exception),
+            repositoryName = gitoliteProject.name.getOrElse(throw new Exception),
+            `private` = gitoliteProject.privateFlag,
+            description = descriptionClob,
+            defaultBranch = Some(gitoliteProject.defaultBranch),
+            registeredDate = gitoliteProject.createdAt,
+            updatedDate = gitoliteProject.updatedAt,
+            lastActivityDate = gitoliteProject.updatedAt
+          )
       }
     }
   }

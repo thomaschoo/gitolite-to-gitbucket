@@ -1,0 +1,30 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+
+        <!--<filter class="ch.qos.logback.core.filter.EvaluatorFilter">-->
+            <!--<evaluator>-->
+                <!--<expression>return message.contains("cleanup");</expression>-->
+            <!--</evaluator>-->
+            <!--<OnMismatch>NEUTRAL</OnMismatch>-->
+            <!--<OnMatch>DENY</OnMatch>-->
+        <!--</filter>-->
+    </appender>
+
+    <!--<appender name="FILE" class="ch.qos.logback.core.FileAppender">-->
+        <!--<file>logs/log.txt</file>-->
+        <!--<append>true</append>-->
+        <!--<encoder>-->
+            <!--<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
+        <!--</encoder>-->
+    <!--</appender>-->
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="FILE"/>-->
+    </root>
+
+    <!--<logger name="com.zaxxer.hikari.pool.HikariPool " level="INFO"/>-->
+</configuration>
