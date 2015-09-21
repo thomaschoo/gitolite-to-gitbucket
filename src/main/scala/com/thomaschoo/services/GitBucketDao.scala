@@ -52,7 +52,8 @@ object GitBucketDao {
         withSQL {
           select
             .from(Account as Account.a)
-            .leftJoin(SshKey as SshKey.sk).on(sqls"a.USER_NAME = sk.USER_NAME AND sk.TITLE = ${Config.keyTitle}")
+            .leftJoin(SshKey as SshKey.sk)
+              .on(sqls.eq(Account.a.userName, SshKey.sk.userName).and.eq(SshKey.sk.title, Config.keyTitle))
             .where(sqls"REPLACE(SUBSTRING(a.MAIL_ADDRESS, 0, LOCATE('@', a.MAIL_ADDRESS, -1) - 1), '.', '') IN (${sshKeys.keys})")
         }.map(extendAccount).list().apply()
 
