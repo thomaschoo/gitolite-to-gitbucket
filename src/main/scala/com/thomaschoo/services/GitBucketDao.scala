@@ -3,8 +3,10 @@ package com.thomaschoo.services
 import java.sql.Clob
 
 import com.thomaschoo.helpers.Config
+import com.thomaschoo.services.GitoliteDao.GitoliteProject
+
 import models.gitbucket.{Account, Repository, SshKey}
-import models.gitolite.{Projects, Users}
+import models.gitolite.Users
 import scalikejdbc._
 
 object GitBucketDao {
@@ -85,7 +87,7 @@ object GitBucketDao {
     }
   }
 
-  def insertRepositories(gitoliteProjects: List[(Projects, Users)]): Unit = {
+  def insertRepositories(gitoliteProjects: List[GitoliteProject]): Unit = {
     NamedDB('gitBucket) localTx { implicit session =>
       gitoliteProjects foreach {
         case (gitoliteProject, gitoliteUser) =>
