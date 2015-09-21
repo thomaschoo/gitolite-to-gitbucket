@@ -63,20 +63,23 @@ object GitBucketDao {
   def insertAccounts(gitoliteUsers: List[Users]): Unit = {
     NamedDB('gitBucket) localTx { implicit session =>
       gitoliteUsers foreach { gitoliteUser =>
-        // TODO: Catch duplicate, check -> update or create
         val user = gitoliteUser.tid.getOrElse(throw new Exception) // TODO: Better exception
         val name = gitoliteUser.name.getOrElse(throw new Exception) // TODO: Better exception
 
-        Account.create(
-          userName = user,
-          mailAddress = gitoliteUser.email,
-          password = "",
-          administrator = gitoliteUser.admin,
-          registeredDate = gitoliteUser.createdAt,
-          updatedDate = gitoliteUser.updatedAt,
-          groupAccount = false,
-          fullName = name
-        )
+        Account.find(user) match {
+          case Some(_) =>
+          case None =>
+            Account.create(
+              userName = user,
+              mailAddress = gitoliteUser.email,
+              password = "",
+              administrator = gitoliteUser.admin,
+              registeredDate = gitoliteUser.createdAt,
+              updatedDate = gitoliteUser.updatedAt,
+              groupAccount = false,
+              fullName = name
+            )
+        }
       }
     }
   }
