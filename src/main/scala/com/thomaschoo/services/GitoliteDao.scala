@@ -1,7 +1,15 @@
 package com.thomaschoo.services
 
+import com.thomaschoo.services.ProjectAccess.AccessLevel
 import models.gitolite.{Projects, Users, UsersProjects}
 import scalikejdbc._
+
+object ProjectAccess extends Enumeration {
+  type AccessLevel = Value
+  val Master = Value(40)
+  val Developer = Value(30)
+  val Reporter = Value(20)
+}
 
 object GitoliteDao {
   DB.setup()
@@ -13,7 +21,6 @@ object GitoliteDao {
   )
 
   type GitoliteProject = (Projects, Users)
-  type ProjectAccess = Int
 
   def getUsers: List[Users] = {
     NamedDB('gitolite) readOnly { implicit session =>
@@ -31,15 +38,14 @@ object GitoliteDao {
     }
   }
 
-  def getUsersForProject(projectId: Int): List[(Users, ProjectAccess)] = {
-    // TODO: project access mapping (40 = master, 20 = Reporter, 30 = Developer)
+  def getUsersForProject(projectId: Int): List[(Users, AccessLevel)] = {
     NamedDB('gitolite) readOnly { implicit session =>
       withSQL {
         select
           .from(UsersProjects as UsersProjects.up)
           .leftJoin(Users as Users.u).on(UsersProjects.up.userId, Users.u.id)
           .where.eq(UsersProjects.up.projectId, projectId)
-      }.map(rs => (Users(Users.u)(rs), rs.int("pa_on_up"))).list().apply()
+      }.map(rs => (Users(Users.u)(rs), ProjectAccess(rs.int("pa_on_up")))).list().apply()
     }
   }
 
