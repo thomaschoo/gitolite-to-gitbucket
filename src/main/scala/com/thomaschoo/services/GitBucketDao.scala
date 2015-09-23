@@ -4,8 +4,7 @@ import java.sql.Clob
 
 import com.thomaschoo.helpers.Config
 import com.thomaschoo.services.GitoliteDao.GitoliteProject
-
-import models.gitbucket.{Account, Repository, SshKey}
+import models.gitbucket.{Account, Collaborator, Repository, SshKey}
 import models.gitolite.Users
 import scalikejdbc._
 
@@ -110,6 +109,26 @@ object GitBucketDao {
             updatedDate = gitoliteProject.updatedAt,
             lastActivityDate = gitoliteProject.updatedAt
           )
+      }
+    }
+  }
+
+  def insertCollaborators(gitoliteProject: GitoliteProject): Unit = {
+    val (project, projectOwner) = gitoliteProject
+    val users = GitoliteDao.getUsersForProject(project.id)
+
+    NamedDB('gitBucket) localTx { implicit session =>
+      users foreach {
+        case (user, access) => access match {
+          case ProjectAccess.Master =>
+            Collaborator.create(
+              userName = projectOwner.tid.getOrElse(throw new Exception),
+              repositoryName = project.name.getOrElse(throw new Exception),
+              collaboratorName = user.tid.getOrElse(throw new Exception)
+            )
+          case ProjectAccess.Developer => insertRepositories((project, user) :: Nil)
+          case ProjectAccess.Reporter => // Do nothing.
+        }
       }
     }
   }
