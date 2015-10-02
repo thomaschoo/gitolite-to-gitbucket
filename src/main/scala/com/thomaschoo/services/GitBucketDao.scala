@@ -69,7 +69,7 @@ object GitBucketDao {
         val name = gitoliteUser.name.getOrElse(throw new Exception) // TODO: Better exception
 
         Account.find(user) match {
-          case Some(_) =>
+          case Some(_) => // Do nothing, duplicate
           case None =>
             Account.create(
               userName = user,
@@ -90,25 +90,31 @@ object GitBucketDao {
     NamedDB('gitBucket) localTx { implicit session =>
       gitoliteProjects foreach {
         case (gitoliteProject, gitoliteUser) =>
-          // TODO: Catch duplicate, check -> update or create
-          val descriptionClob: Option[Clob] = gitoliteProject.description match {
-            case Some(description) =>
-              val clob: Clob = session.connection.createClob()
-              clob.setString(1, description)
-              Some(clob)
-            case None => None
-          }
+          val user = gitoliteUser.tid.getOrElse(throw new Exception)
+          val repository = gitoliteProject.name.getOrElse(throw new Exception)
 
-          Repository.create(
-            userName = gitoliteUser.tid.getOrElse(throw new Exception),
-            repositoryName = gitoliteProject.name.getOrElse(throw new Exception),
-            `private` = gitoliteProject.privateFlag,
-            description = descriptionClob,
-            defaultBranch = Some(gitoliteProject.defaultBranch),
-            registeredDate = gitoliteProject.createdAt,
-            updatedDate = gitoliteProject.updatedAt,
-            lastActivityDate = gitoliteProject.updatedAt
-          )
+          Repository.find(repository, user) match {
+            case Some(_) => // Do nothing, duplicate
+            case None =>
+              val descriptionClob: Option[Clob] = gitoliteProject.description match {
+                case Some(description) =>
+                  val clob: Clob = session.connection.createClob()
+                  clob.setString(1, description)
+                  Some(clob)
+                case None => None
+              }
+
+              Repository.create(
+                userName = user,
+                repositoryName = repository,
+                `private` = gitoliteProject.privateFlag,
+                description = descriptionClob,
+                defaultBranch = Some(gitoliteProject.defaultBranch),
+                registeredDate = gitoliteProject.createdAt,
+                updatedDate = gitoliteProject.updatedAt,
+                lastActivityDate = gitoliteProject.updatedAt
+              )
+          }
       }
     }
   }
