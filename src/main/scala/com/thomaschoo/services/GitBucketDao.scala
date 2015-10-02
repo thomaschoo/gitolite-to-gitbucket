@@ -121,19 +121,29 @@ object GitBucketDao {
 
   def insertCollaborators(gitoliteProject: GitoliteProject): Unit = {
     val (project, projectOwner) = gitoliteProject
-    val users = GitoliteDao.getUsersForProject(project.id)
+    val users = GitoliteDao.getUsersForProject(project.id) filter {
+      case (user, _) => user.id != projectOwner.id
+    }
 
     NamedDB('gitBucket) localTx { implicit session =>
       users foreach {
         case (user, access) => access match {
           case ProjectAccess.Master =>
-            Collaborator.create(
-              userName = projectOwner.tid.getOrElse(throw new Exception),
-              repositoryName = project.name.getOrElse(throw new Exception),
-              collaboratorName = user.tid.getOrElse(throw new Exception)
-            )
+            val owner = projectOwner.tid.getOrElse(throw new Exception)
+            val repository = project.name.getOrElse(throw new Exception)
+            val collaborator = user.tid.getOrElse(throw new Exception)
+
+            Collaborator.find(collaborator, repository, owner) match {
+              case Some(_) => // Do nothing, duplicate
+              case None =>
+                Collaborator.create(
+                  userName = owner,
+                  repositoryName = repository,
+                  collaboratorName = collaborator
+                )
+            }
           case ProjectAccess.Developer => insertRepositories((project, user) :: Nil)
-          case ProjectAccess.Reporter => // Do nothing.
+          case ProjectAccess.Reporter => // Do nothing
         }
       }
     }
