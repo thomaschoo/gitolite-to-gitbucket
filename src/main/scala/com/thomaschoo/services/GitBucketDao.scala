@@ -79,7 +79,8 @@ object GitBucketDao {
               registeredDate = gitoliteUser.createdAt,
               updatedDate = gitoliteUser.updatedAt,
               groupAccount = false,
-              fullName = name
+              fullName = name,
+              removed = Option(gitoliteUser.blocked)
             )
         }
       }
