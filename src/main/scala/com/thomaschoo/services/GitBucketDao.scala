@@ -92,7 +92,7 @@ object GitBucketDao {
       gitoliteProjects foreach {
         case (gitoliteProject, gitoliteUser) =>
           val user = gitoliteUser.tid.getOrElse(throw new Exception)
-          val repository = gitoliteProject.name.getOrElse(throw new Exception)
+          val repository = gitoliteProject.path.getOrElse(throw new Exception)
 
           Repository.find(repository, user) match {
             case Some(_) => // Do nothing, duplicate
@@ -131,17 +131,12 @@ object GitBucketDao {
         case (user, access) => access match {
           case ProjectAccess.Master =>
             val owner = projectOwner.tid.getOrElse(throw new Exception)
-            val repository = project.name.getOrElse(throw new Exception)
+            val repository = project.path.getOrElse(throw new Exception)
             val collaborator = user.tid.getOrElse(throw new Exception)
 
             Collaborator.find(collaborator, repository, owner) match {
-              case Some(_) => // Do nothing, duplicate
-              case None =>
-                Collaborator.create(
-                  userName = owner,
-                  repositoryName = repository,
-                  collaboratorName = collaborator
-                )
+              case Some(_)  => // Do nothing, duplicate
+              case None     => Collaborator.create(owner, repository, collaborator)
             }
           case ProjectAccess.Developer => insertRepositories((project, user) :: Nil)
           case ProjectAccess.Reporter => // Do nothing
