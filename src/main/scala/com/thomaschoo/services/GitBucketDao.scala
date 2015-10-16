@@ -4,7 +4,8 @@ import java.sql.Clob
 
 import com.thomaschoo.helpers.Config
 import com.thomaschoo.services.GitoliteDao.GitoliteProject
-import models.gitbucket.{Account, Collaborator, Repository, SshKey}
+
+import models.gitbucket._
 import models.gitolite.Users
 import scalikejdbc._
 
@@ -116,6 +117,8 @@ object GitBucketDao {
                 lastActivityDate = gitoliteProject.updatedAt
               )
           }
+
+          insertIssueIds(user, repository)
       }
     }
   }
@@ -141,6 +144,15 @@ object GitBucketDao {
           case ProjectAccess.Developer => insertRepositories((project, user) :: Nil)
           case ProjectAccess.Reporter => // Do nothing
         }
+      }
+    }
+  }
+
+  def insertIssueIds(userName: String, repositoryName: String): Unit = {
+    NamedDB('gitBucket) localTx { implicit session =>
+      IssueId.find(repositoryName, userName) match {
+        case Some(_) => // Do nothing, duplicate
+        case None => IssueId.create(userName, repositoryName, 0)
       }
     }
   }
