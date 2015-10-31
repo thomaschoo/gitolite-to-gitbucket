@@ -2,6 +2,8 @@ package com.thomaschoo.helpers
 
 import com.typesafe.config.ConfigFactory
 
+import scala.collection.JavaConversions._
+
 object Config {
   private val config = ConfigFactory.load()
 
@@ -22,5 +24,9 @@ object Config {
   val gitBucketDbPassword = gitBucketDbConfig.getString("password")
 
   val keyTitle: String = gitBucketConfig.getString("keyTitle")
+
+  val labelColours = gitBucketConfig.getObject("labelColours") map {
+    case (key, conf) => key -> conf.render().replaceAll("\"", "")
+  }
 
 }

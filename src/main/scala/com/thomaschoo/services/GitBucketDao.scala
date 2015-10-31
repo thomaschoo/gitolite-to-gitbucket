@@ -4,7 +4,6 @@ import java.sql.Clob
 
 import com.thomaschoo.helpers.Config
 import com.thomaschoo.services.GitoliteDao.GitoliteProject
-
 import models.gitbucket._
 import models.gitolite.Users
 import scalikejdbc._
@@ -96,6 +95,20 @@ object GitBucketDao {
       }
     }
 
+    def insertLabels(userName: String, repositoryName: String)(implicit session: DBSession): Unit = {
+      Config.labelColours foreach {
+        case (labelName, colour) =>
+          Label.findBy(sqls
+            .eq(Label.l.userName, userName)
+            .and.eq(Label.l.repositoryName, repositoryName)
+            .and.eq(Label.l.labelName, labelName)
+          ) match {
+            case Some(_) => // Do nothing, duplicate
+            case None => Label.create(userName, repositoryName, labelName, colour)
+          }
+      }
+    }
+
     NamedDB('gitBucket) localTx { implicit session =>
       gitoliteProjects foreach {
         case (gitoliteProject, gitoliteUser) =>
@@ -126,6 +139,7 @@ object GitBucketDao {
           }
 
           insertIssueIds(user, repository)
+          insertLabels(user, repository)
       }
     }
   }
@@ -154,4 +168,5 @@ object GitBucketDao {
       }
     }
   }
+
 }
