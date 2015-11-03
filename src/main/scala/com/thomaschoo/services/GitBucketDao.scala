@@ -88,14 +88,16 @@ object GitBucketDao {
   }
 
   def insertRepositories(gitoliteProjects: List[GitoliteProject]): Unit = {
-    def insertIssueIds(userName: String, repositoryName: String)(implicit session: DBSession): Unit = {
+    def insertIssueIds(userName: String, repositoryName: String)
+                      (implicit session: DBSession): Unit = {
       IssueId.find(repositoryName, userName) match {
-        case Some(_) => // Do nothing, duplicate
-        case None => IssueId.create(userName, repositoryName, 0)
+        case Some(_)  => // Do nothing, duplicate
+        case None     => IssueId.create(userName, repositoryName, 0)
       }
     }
 
-    def insertLabels(userName: String, repositoryName: String)(implicit session: DBSession): Unit = {
+    def insertLabels(userName: String, repositoryName: String)
+                    (implicit session: DBSession): Unit = {
       Config.labelColours foreach {
         case (labelName, colour) =>
           Label.findBy(sqls
@@ -103,8 +105,8 @@ object GitBucketDao {
             .and.eq(Label.l.repositoryName, repositoryName)
             .and.eq(Label.l.labelName, labelName)
           ) match {
-            case Some(_) => // Do nothing, duplicate
-            case None => Label.create(userName, repositoryName, labelName, colour)
+            case Some(_)  => // Do nothing, duplicate
+            case None     => Label.create(userName, repositoryName, labelName, colour)
           }
       }
     }

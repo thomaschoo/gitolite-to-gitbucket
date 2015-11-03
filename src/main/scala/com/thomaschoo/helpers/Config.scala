@@ -14,7 +14,7 @@ object Config {
   val gitoliteDbUser = gitoliteDbConfig.getString("user")
   val gitoliteDbPassword = gitoliteDbConfig.getString("password")
 
-  val directory: String = gitoliteConfig.getString("directory")
+  val directory = gitoliteConfig.getString("directory")
 
   private val gitBucketConfig = config.getConfig("gitBucket")
   private val gitBucketDbConfig = gitBucketConfig.getConfig("db")
@@ -23,10 +23,10 @@ object Config {
   val gitBucketDbUser = gitBucketDbConfig.getString("user")
   val gitBucketDbPassword = gitBucketDbConfig.getString("password")
 
-  val keyTitle: String = gitBucketConfig.getString("keyTitle")
+  val keyTitle = gitBucketConfig.getString("keyTitle")
 
-  val labelColours = gitBucketConfig.getObject("labelColours") map {
+  val labelColours: Map[String, String] = gitBucketConfig.getObject("labelColours").map {
     case (key, conf) => key -> conf.render().replaceAll("\"", "")
-  }
+  }.toMap
 
 }
